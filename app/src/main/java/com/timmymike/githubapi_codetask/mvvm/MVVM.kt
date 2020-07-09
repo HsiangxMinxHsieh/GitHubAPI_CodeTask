@@ -48,6 +48,7 @@ class MainViewModel(val context: Context) : ViewModel() {
             liveLoadingOver.postValue(false)
             GlobalScope.launch {
                 try {
+                    //when search,mean new String to search ,so need clean before data
                     list.clear()
 
                     list.getFromApiSearchData( search)
@@ -75,13 +76,14 @@ class MainViewModel(val context: Context) : ViewModel() {
         val response = cell.execute()
         logi(TAG, "getFromApiSearchData Send Data is===>${response ?: "null"}")
         if (response.isSuccessful) {
+            // debug check log
             logi(TAG, "getFromApiSearchData Get Data is Below,total ${response?.body()?.items?.size ?: 0} count")
-
 //            response?.body()?.items?.logiAllData()
             this.addAll(response?.body()?.items ?: mutableListOf())
 
         } else {
             Handler(Looper.getMainLooper()).post {
+                //normal is 403 (rate limit error)
                 val errorJson = JSONObject(response.errorBody()?.string().toString())
                 Toast.makeText(context, "getDataFail，because:${errorJson.optString("message","Other error can't get Message")}", Toast.LENGTH_SHORT).show()
             }
@@ -91,12 +93,12 @@ class MainViewModel(val context: Context) : ViewModel() {
         return
     }
 
-    fun openItem(itemName: String) {
+    fun clickItem(itemName: String) {
         Toast.makeText(context, "You clicked $itemName", Toast.LENGTH_SHORT).show()
     }
 
     fun reGetData(recyclerView: RecyclerView, nowGetPage: Int) {
-        liveLoadingOver.setValue(false)
+        liveLoadingOver.postValue(false)
         GlobalScope.launch {
             val list = ArrayList<UserSearchModel.Item>()
             list.addAll(listLiveData.value ?: mutableListOf())
