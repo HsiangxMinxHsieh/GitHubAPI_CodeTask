@@ -15,7 +15,7 @@ You will see, at orange frame the string you key in.<BR>
 Then press the red frame,to start search.<BR>
 You will see the result like this:<BR>
 <image width = "20%" src = "https://github.com/HsiangxMinxHsieh/GitHubAPI_CodeTask/blob/master/readmePic/pic-07-09_13-22-49.png"/><BR>
-=============================================================================<BR>
+===================================================================<BR>
 <h3>2.automatically loading next page<BR></h3>
 When you slide touch buttom,the app will auto load more data,like this:<BR>
 <image width = "20%" src = "https://github.com/HsiangxMinxHsieh/GitHubAPI_CodeTask/blob/master/readmePic/pic-07-09_13-08-36.png"/><BR>
