@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         mainBinding = DataBindingUtil.setContentView(activity, R.layout.activity_main)
 //        setContentView(R.layout.activity_main)
+        initMvvm()
 
         initView()
 
@@ -38,8 +39,7 @@ class MainActivity : AppCompatActivity() {
         initObeserver()
     }
 
-
-    private fun initView() {
+    private fun initMvvm() {
         viewModel = ViewModelProvider(
             this,
             ViewModelFactory(context)
@@ -47,6 +47,11 @@ class MainActivity : AppCompatActivity() {
 
         mainBinding.viewModel = viewModel
         mainBinding.lifecycleOwner = activity
+    }
+
+
+    private fun initView() {
+
 
         mainBinding.rvUserList.layoutManager = LinearLayoutManager(context).apply {
             orientation = RecyclerView.VERTICAL
@@ -63,7 +68,7 @@ class MainActivity : AppCompatActivity() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 if (dy > 0 && recyclerView.computeVerticalScrollOffset() > 0 && !recyclerView.canScrollVertically(1)) { //
                     val position = (recyclerView.adapter as UserAdapter).getNowSlidePostion()
-                    viewModel.reGetData(recyclerView, position / 30 + 2)
+                    viewModel.reGetData( position / 30 + 2)
                 }
             }
         })
