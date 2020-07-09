@@ -1,8 +1,12 @@
 package com.timmymike.githubapi_codetask.mvvm
 
+import android.app.Activity
 import android.content.Context
+import android.os.Handler
+import android.os.Looper
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -16,6 +20,7 @@ import com.timmymike.githubapi_codetask.tools.logi
 import com.timmymike.githubapi_codetask.tools.logiAllData
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 /**======== MVVM ========*/
 
@@ -23,29 +28,36 @@ class MainViewModel(val context: Context) : ViewModel() {
     val TAG = javaClass.simpleName
     val listLiveData: MutableLiveData<ArrayList<UserSearchModel.Item>> by lazy { MutableLiveData<ArrayList<UserSearchModel.Item>>() }
     val liveLoadingOver: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>() } // According this value To Show now Status
+    var searchString = ""
 
     init {
         liveLoadingOver.postValue(true) // default close the progressBar
     }
 
     fun searchData(search: String?) {
-        logi(TAG, "收到的searchString是===>$search")
+        logi(TAG, "the search string get is===>$search")
+
+        //close the input keyboad
+        (context.getSystemService(Context.INPUT_METHOD_SERVICE) as (InputMethodManager))
+            .hideSoftInputFromWindow((context as Activity).window.decorView.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+
         if (search != null && search != "") {
+            searchString = search
+
             val list = ArrayList<UserSearchModel.Item>()
             liveLoadingOver.postValue(false)
             GlobalScope.launch {
                 try {
-
-
                     list.clear()
-                    list.getFromApiSearchData(search)
+
+                    list.getFromApiSearchData( search)
 
                     listLiveData.postValue(list)
 
                 } catch (e: Exception) {
                     Toast.makeText(context, "getDataFail，because:${e.message}", Toast.LENGTH_SHORT).show()
                     e.printStackTrace()
-                }finally {
+                } finally {
                     liveLoadingOver.postValue(true)
                 }
             }
@@ -54,13 +66,9 @@ class MainViewModel(val context: Context) : ViewModel() {
         }
     }
 
-    fun openItem(itemName: String) {
-        Toast.makeText(context, "You clicked $itemName", Toast.LENGTH_SHORT).show()
-    }
-
     @Throws(Exception::class)
-    private fun ArrayList<UserSearchModel.Item>.getFromApiSearchData(search: String) {
-        val cell = ApiConnect.getService(context).getSearchData(search)
+    fun ArrayList<UserSearchModel.Item>.getFromApiSearchData( search: String, nowGetPage: Int = 1, TAG: String = "getFromApiSearchData") {
+        val cell = ApiConnect.getService(context).getSearchData(search, nowGetPage)
 
         logi(TAG, "Start Call API,To Get getFromApiSearchData Method")
 
@@ -69,16 +77,41 @@ class MainViewModel(val context: Context) : ViewModel() {
         if (response.isSuccessful) {
             logi(TAG, "getFromApiSearchData Get Data is Below,total ${response?.body()?.items?.size ?: 0} count")
 
-            response?.body()?.items?.logiAllData()
+//            response?.body()?.items?.logiAllData()
             this.addAll(response?.body()?.items ?: mutableListOf())
 
+        } else {
+            Handler(Looper.getMainLooper()).post {
+                val errorJson = JSONObject(response.errorBody()?.string().toString())
+                Toast.makeText(context, "getDataFail，because:${errorJson.optString("message","Other error can't get Message")}", Toast.LENGTH_SHORT).show()
+            }
         }
         response?.body().toString()
 
         return
     }
 
+    fun openItem(itemName: String) {
+        Toast.makeText(context, "You clicked $itemName", Toast.LENGTH_SHORT).show()
+    }
+
+    fun reGetData(recyclerView: RecyclerView, nowGetPage: Int) {
+        liveLoadingOver.setValue(false)
+        GlobalScope.launch {
+            val list = ArrayList<UserSearchModel.Item>()
+            list.addAll(listLiveData.value ?: mutableListOf())
+            list.getFromApiSearchData(searchString, nowGetPage)
+            listLiveData.postValue(list)
+            liveLoadingOver.postValue(true)
+            Handler(Looper.getMainLooper()).post {
+                recyclerView.adapter?.notifyDataSetChanged()
+            }
+        }
+    }
+
+
 }
+
 
 class ViewModelFactory(private val context: Context) :
     ViewModelProvider.Factory {
@@ -92,8 +125,8 @@ class ViewModelFactory(private val context: Context) :
 
 
 class UserAdapter(val viewModel: MainViewModel) : RecyclerView.Adapter<UserAdapter.ViewHolder>() {
-    var list: ArrayList< UserSearchModel.Item>? = viewModel.listLiveData.value
-
+    var list: ArrayList<UserSearchModel.Item>? = viewModel.listLiveData.value
+    var slidePosition = 0
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
         return ViewHolder.from(parent)
@@ -104,11 +137,14 @@ class UserAdapter(val viewModel: MainViewModel) : RecyclerView.Adapter<UserAdapt
             val item = list!![position]
             holder.bind(viewModel, item)
         }
+        slidePosition = position
     }
 
     override fun getItemCount(): Int {
         return list?.count() ?: 0
     }
+
+    fun getNowSlidePostion() = slidePosition
 
     class ViewHolder private constructor(private val binding: AdapterUserListBinding) :
         RecyclerView.ViewHolder(binding.root) {

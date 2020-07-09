@@ -14,7 +14,6 @@ import com.timmymike.githubapi_codetask.mvvm.MainViewModel
 import com.timmymike.githubapi_codetask.mvvm.UserAdapter
 import com.timmymike.githubapi_codetask.mvvm.ViewModelFactory
 import com.timmymike.githubapi_codetask.tools.logi
-import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -34,8 +33,11 @@ class MainActivity : AppCompatActivity() {
 
         initView()
 
+        initEvent()
+
         initObeserver()
     }
+
 
     private fun initView() {
         viewModel = ViewModelProvider(
@@ -55,6 +57,18 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun initEvent() {
+        //Listen Scroll Event
+        mainBinding.rvUserList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy > 0 && recyclerView.computeVerticalScrollOffset() > 0 && !recyclerView.canScrollVertically(1)) { //
+                    val position = (recyclerView.adapter as UserAdapter).getNowSlidePostion()
+                    viewModel.reGetData(recyclerView, position / 30 + 2)
+                }
+            }
+        })
+    }
+
     private fun initObeserver() {
         viewModel.listLiveData.observe(this,
             Observer<ArrayList<UserSearchModel.Item>> {
@@ -62,7 +76,7 @@ class MainActivity : AppCompatActivity() {
                 adapter.list = viewModel.listLiveData.value
                 adapter.notifyDataSetChanged()
                 activity.title =
-                    "${context.getString(R.string.app_name)} Number of items：${it.size}"
+                    "${context.getString(R.string.app_name)} Search Result Size：${it.size}"
             })
     }
 }

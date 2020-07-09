@@ -44,6 +44,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintWidth_percent="0.1"
+            android:visibility="gone"
             app:srcCompat="@drawable/ic_search_black_24dp" />
 
         <androidx.recyclerview.widget.RecyclerView

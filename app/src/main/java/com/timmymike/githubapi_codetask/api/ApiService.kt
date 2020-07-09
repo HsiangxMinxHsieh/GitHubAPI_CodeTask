@@ -14,5 +14,5 @@ interface ApiService {
 
     @Headers("Content-Type: application/json", "Accept: application/json")
     @GET("/search/users")
-    fun getSearchData(@Query("q") search:String): Call<UserSearchModel>
+    fun getSearchData(@Query("q") search:String,@Query("page") index:Int = 1,@Query("per_page") perPage :Int = 30): Call<UserSearchModel>
 }

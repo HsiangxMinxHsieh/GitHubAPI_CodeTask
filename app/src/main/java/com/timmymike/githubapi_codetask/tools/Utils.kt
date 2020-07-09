@@ -89,10 +89,8 @@ fun setOnOkInSoftKeyboardListener(
     if (listener == null) {
         view.setOnEditorActionListener(null)
     } else {
-        view.setOnEditorActionListener { _, _, _ -> // ... solution to receiving event
+        view.setOnEditorActionListener { _, _, _ ->
             listener.onOkInSoftKeyboard()
-                (view.context.getSystemService(Context.INPUT_METHOD_SERVICE) as (InputMethodManager))
-                    .hideSoftInputFromWindow(view.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
             false
         }
     }
